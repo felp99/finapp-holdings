@@ -1,1 +1,0 @@
-from analise.entities import *

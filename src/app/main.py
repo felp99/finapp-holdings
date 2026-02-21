@@ -1,10 +1,7 @@
-import sys
-sys.path.append('./src')
-
 from flask import Flask, request, jsonify
 from functools import wraps
 import datetime
-from analise import TickerInvestment
+from ..analysis import TickerInvestment
 import os
 
 app = Flask(__name__)
@@ -19,7 +16,7 @@ def require_api_key(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/investment-ticker', methods=['POST'])
+@app.route('/ticker', methods=['POST'])
 @require_api_key
 def investment_ticker():
     data = request.json
