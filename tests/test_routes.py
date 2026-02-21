@@ -6,7 +6,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from src.app.main import app
-from src.models import PricePoint, MultiplierPoint, TickerResponse
+from src.models import PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -52,3 +52,61 @@ def test_wrong_token_returns_401():
         headers={"Authorization": "Bearer wrong-key"},
     )
     assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# GET /tickers/search
+# ---------------------------------------------------------------------------
+
+MOCK_SEARCH_RESPONSE = TickerSearchResponse(results=[
+    TickerSearchResult(symbol="BTC-USD", name="Bitcoin USD", type="CRYPTOCURRENCY", exchange="CCC"),
+    TickerSearchResult(symbol="BCH-USD", name="Bitcoin Cash USD", type="CRYPTOCURRENCY", exchange="CCC"),
+])
+
+AUTH = {"Authorization": f"Bearer {VALID_TOKEN}"}
+
+
+def test_search_returns_200():
+    with patch("src.app.routes.search_tickers", return_value=MOCK_SEARCH_RESPONSE):
+        response = client.get("/tickers/search", params={"q": "bitcoin"}, headers=AUTH)
+    assert response.status_code == 200
+    body = response.json()
+    assert "results" in body
+    assert len(body["results"]) == 2
+
+
+def test_search_result_fields():
+    with patch("src.app.routes.search_tickers", return_value=MOCK_SEARCH_RESPONSE):
+        response = client.get("/tickers/search", params={"q": "bitcoin"}, headers=AUTH)
+    first = response.json()["results"][0]
+    assert first["symbol"] == "BTC-USD"
+    assert first["name"] == "Bitcoin USD"
+    assert first["type"] == "CRYPTOCURRENCY"
+    assert first["exchange"] == "CCC"
+
+
+def test_search_missing_query_returns_422():
+    response = client.get("/tickers/search", headers=AUTH)
+    assert response.status_code == 422
+
+
+def test_search_missing_token_returns_403():
+    response = client.get("/tickers/search", params={"q": "bitcoin"})
+    assert response.status_code == 403
+
+
+def test_search_wrong_token_returns_401():
+    response = client.get(
+        "/tickers/search",
+        params={"q": "bitcoin"},
+        headers={"Authorization": "Bearer wrong-key"},
+    )
+    assert response.status_code == 401
+
+
+def test_search_empty_results():
+    empty = TickerSearchResponse(results=[])
+    with patch("src.app.routes.search_tickers", return_value=empty):
+        response = client.get("/tickers/search", params={"q": "zzznomatch"}, headers=AUTH)
+    assert response.status_code == 200
+    assert response.json()["results"] == []

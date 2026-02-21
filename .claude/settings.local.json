@@ -10,7 +10,8 @@
       "Bash(.venv/bin/pip freeze:*)",
       "Bash(source .venv/bin/activate && pytest tests/test_routes.py -v 2>&1)",
       "Bash(tail:*)",
-      "Bash(source .venv/bin/activate && pytest tests/test_integration.py -m integration -v 2>&1)"
+      "Bash(source .venv/bin/activate && pytest tests/test_integration.py -m integration -v 2>&1)",
+      "Bash(source:*)"
     ]
   }
 }

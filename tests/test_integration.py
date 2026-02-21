@@ -10,7 +10,7 @@ Excluded from the default test run (pytest tests/) to keep CI offline and fast.
 import pytest
 from datetime import datetime, timezone
 
-from src.service import fetch_ticker
+from src.service import fetch_ticker, search_tickers
 
 START = datetime(2024, 1, 1, tzinfo=timezone.utc)
 END = datetime(2024, 1, 8, tzinfo=timezone.utc)  # one week
@@ -74,3 +74,49 @@ def test_invalid_ticker_returns_empty():
 
     assert result.prices == []
     assert result.multipliers == []
+
+
+# ---------------------------------------------------------------------------
+# search_tickers
+# ---------------------------------------------------------------------------
+
+@pytest.mark.integration
+def test_search_bitcoin_returns_btc_usd():
+    result = search_tickers("bitcoin")
+
+    symbols = [r.symbol for r in result.results]
+    assert "BTC-USD" in symbols
+
+
+@pytest.mark.integration
+def test_search_apple_returns_aapl():
+    result = search_tickers("apple")
+
+    symbols = [r.symbol for r in result.results]
+    assert "AAPL" in symbols
+
+
+@pytest.mark.integration
+def test_search_results_have_required_fields():
+    result = search_tickers("bitcoin")
+
+    for r in result.results:
+        assert r.symbol
+        assert r.name
+        assert r.type
+        # exchange may be empty for some instruments, so we just check it exists
+        assert hasattr(r, "exchange")
+
+
+@pytest.mark.integration
+def test_search_returns_multiple_results():
+    result = search_tickers("bitcoin")
+
+    assert len(result.results) > 1
+
+
+@pytest.mark.integration
+def test_search_no_match_returns_empty():
+    result = search_tickers("zzznomatchatall123")
+
+    assert result.results == []

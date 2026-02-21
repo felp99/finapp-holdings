@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import yfinance as yf
-from .models import PricePoint, MultiplierPoint, TickerResponse
+from .models import PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse
 
 INTERVAL = "1d"
 
@@ -23,3 +23,17 @@ def fetch_ticker(ticker: str, start: datetime, end: datetime | None) -> TickerRe
     multipliers = [MultiplierPoint(datetime=dt, value=float(p / base)) for dt, p in zip(datetimes, closes)]
 
     return TickerResponse(prices=prices, multipliers=multipliers)
+
+
+def search_tickers(query: str, max_results: int = 10) -> TickerSearchResponse:
+    search = yf.Search(query, max_results=max_results)
+    results = [
+        TickerSearchResult(
+            symbol=q["symbol"],
+            name=q.get("longname") or q.get("shortname") or q["symbol"],
+            type=q.get("quoteType", ""),
+            exchange=q.get("exchDisp") or q.get("exchange", ""),
+        )
+        for q in search.quotes
+    ]
+    return TickerSearchResponse(results=results)

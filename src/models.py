@@ -21,3 +21,14 @@ class MultiplierPoint(BaseModel):
 class TickerResponse(BaseModel):
     prices: list[PricePoint]
     multipliers: list[MultiplierPoint]
+
+
+class TickerSearchResult(BaseModel):
+    symbol: str
+    name: str
+    type: str
+    exchange: str
+
+
+class TickerSearchResponse(BaseModel):
+    results: list[TickerSearchResult]

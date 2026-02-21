@@ -1,9 +1,9 @@
 import pandas as pd
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from src.service import fetch_ticker
+from src.service import fetch_ticker, search_tickers
 
 
 def _make_df(closes: list[float], start_iso: str = "2024-01-01 10:00:00+00:00") -> pd.DataFrame:
@@ -158,3 +158,78 @@ def test_fetch_ticker_prices_and_multipliers_same_length(mock_ticker_cls):
     result = fetch_ticker("ETH-USD", datetime(2024, 1, 1, tzinfo=timezone.utc), None)
 
     assert len(result.prices) == len(result.multipliers)
+
+
+# ---------------------------------------------------------------------------
+# search_tickers
+# ---------------------------------------------------------------------------
+
+def _make_search_mock(quotes: list[dict]) -> MagicMock:
+    mock = MagicMock()
+    mock.quotes = quotes
+    return mock
+
+
+@patch("src.service.yf.Search")
+def test_search_tickers_returns_results(mock_search_cls):
+    mock_search_cls.return_value = _make_search_mock([
+        {"symbol": "BTC-USD", "longname": "Bitcoin USD", "quoteType": "CRYPTOCURRENCY", "exchDisp": "CCC"},
+        {"symbol": "BCH-USD", "shortname": "Bitcoin Cash USD", "quoteType": "CRYPTOCURRENCY", "exchDisp": "CCC"},
+    ])
+
+    result = search_tickers("bitcoin")
+
+    assert len(result.results) == 2
+    assert result.results[0].symbol == "BTC-USD"
+    assert result.results[1].symbol == "BCH-USD"
+
+
+@patch("src.service.yf.Search")
+def test_search_tickers_uses_longname_when_available(mock_search_cls):
+    mock_search_cls.return_value = _make_search_mock([
+        {"symbol": "AAPL", "longname": "Apple Inc.", "shortname": "Apple", "quoteType": "EQUITY", "exchDisp": "NASDAQ"},
+    ])
+
+    result = search_tickers("apple")
+
+    assert result.results[0].name == "Apple Inc."
+
+
+@patch("src.service.yf.Search")
+def test_search_tickers_falls_back_to_shortname(mock_search_cls):
+    mock_search_cls.return_value = _make_search_mock([
+        {"symbol": "BTC=F", "shortname": "Bitcoin Futures", "quoteType": "FUTURE", "exchDisp": "CME"},
+    ])
+
+    result = search_tickers("bitcoin futures")
+
+    assert result.results[0].name == "Bitcoin Futures"
+
+
+@patch("src.service.yf.Search")
+def test_search_tickers_falls_back_to_symbol_when_no_name(mock_search_cls):
+    mock_search_cls.return_value = _make_search_mock([
+        {"symbol": "XYZ", "quoteType": "EQUITY", "exchDisp": "NYSE"},
+    ])
+
+    result = search_tickers("xyz")
+
+    assert result.results[0].name == "XYZ"
+
+
+@patch("src.service.yf.Search")
+def test_search_tickers_empty_results(mock_search_cls):
+    mock_search_cls.return_value = _make_search_mock([])
+
+    result = search_tickers("zzznomatch")
+
+    assert result.results == []
+
+
+@patch("src.service.yf.Search")
+def test_search_tickers_passes_query_to_yfinance(mock_search_cls):
+    mock_search_cls.return_value = _make_search_mock([])
+
+    search_tickers("tesla", max_results=5)
+
+    mock_search_cls.assert_called_once_with("tesla", max_results=5)
