@@ -18,4 +18,4 @@ primary_region = 'cdg'
   size = 'shared-cpu-1x'
 
 [processes]
-  app = "flask --app src.app.main run --host=0.0.0.0 --port=8080"
+  app = "uvicorn src.app.main:app --host=0.0.0.0 --port=8080"
