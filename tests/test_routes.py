@@ -6,7 +6,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from src.app.main import app
-from src.models import PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse
+from src.models import PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse, SelicResponse
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -110,3 +110,100 @@ def test_search_empty_results():
         response = client.get("/tickers/search", params={"q": "zzznomatch"}, headers=AUTH)
     assert response.status_code == 200
     assert response.json()["results"] == []
+
+
+def test_search_service_error_returns_500():
+    with patch("src.app.routes.search_tickers", side_effect=RuntimeError("upstream failure")):
+        response = client.get("/tickers/search", params={"q": "bitcoin"}, headers=AUTH)
+    assert response.status_code == 500
+
+
+# ---------------------------------------------------------------------------
+# GET /ticker — error path
+# ---------------------------------------------------------------------------
+
+
+def test_ticker_missing_params_returns_422():
+    response = client.get("/ticker", headers=AUTH)
+    assert response.status_code == 422
+
+
+def test_ticker_service_error_returns_500():
+    with patch("src.app.routes.fetch_ticker", side_effect=RuntimeError("yfinance down")):
+        response = client.get("/ticker", params=TICKER_PARAMS, headers=AUTH)
+    assert response.status_code == 500
+
+
+# ---------------------------------------------------------------------------
+# GET /selic
+# ---------------------------------------------------------------------------
+
+MOCK_SELIC_RESPONSE = SelicResponse(
+    multipliers=[
+        MultiplierPoint(datetime=datetime(2024, 1, 2, tzinfo=timezone.utc), value=1.0),
+        MultiplierPoint(datetime=datetime(2024, 1, 3, tzinfo=timezone.utc), value=1.000369),
+    ]
+)
+
+SELIC_PARAMS = {"start": "2024-01-01"}
+
+
+def test_selic_returns_200():
+    with patch("src.app.routes.fetch_selic", return_value=MOCK_SELIC_RESPONSE):
+        response = client.get("/selic", params=SELIC_PARAMS, headers=AUTH)
+    assert response.status_code == 200
+    body = response.json()
+    assert "multipliers" in body
+    assert len(body["multipliers"]) == 2
+
+
+def test_selic_multiplier_fields():
+    with patch("src.app.routes.fetch_selic", return_value=MOCK_SELIC_RESPONSE):
+        response = client.get("/selic", params=SELIC_PARAMS, headers=AUTH)
+    first = response.json()["multipliers"][0]
+    assert "datetime" in first
+    assert "value" in first
+    assert first["value"] == pytest.approx(1.0)
+
+
+def test_selic_missing_start_returns_422():
+    response = client.get("/selic", headers=AUTH)
+    assert response.status_code == 422
+
+
+def test_selic_missing_token_returns_403():
+    response = client.get("/selic", params=SELIC_PARAMS)
+    assert response.status_code == 403
+
+
+def test_selic_wrong_token_returns_401():
+    response = client.get("/selic", params=SELIC_PARAMS, headers={"Authorization": "Bearer wrong-key"})
+    assert response.status_code == 401
+
+
+def test_selic_with_ir_flag():
+    with patch("src.app.routes.fetch_selic", return_value=MOCK_SELIC_RESPONSE) as mock_fn:
+        response = client.get("/selic", params={**SELIC_PARAMS, "ir": "true"}, headers=AUTH)
+    assert response.status_code == 200
+    _, kwargs = mock_fn.call_args
+    assert kwargs["ir"] is True
+
+
+def test_selic_with_percentage():
+    with patch("src.app.routes.fetch_selic", return_value=MOCK_SELIC_RESPONSE) as mock_fn:
+        response = client.get("/selic", params={**SELIC_PARAMS, "percentage": "103"}, headers=AUTH)
+    assert response.status_code == 200
+    _, kwargs = mock_fn.call_args
+    assert kwargs["percentage"] == pytest.approx(103.0)
+
+
+def test_selic_with_explicit_end():
+    with patch("src.app.routes.fetch_selic", return_value=MOCK_SELIC_RESPONSE):
+        response = client.get("/selic", params={"start": "2024-01-01", "end": "2024-01-31"}, headers=AUTH)
+    assert response.status_code == 200
+
+
+def test_selic_service_error_returns_500():
+    with patch("src.app.routes.fetch_selic", side_effect=RuntimeError("BCB unreachable")):
+        response = client.get("/selic", params=SELIC_PARAMS, headers=AUTH)
+    assert response.status_code == 500
