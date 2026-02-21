@@ -16,10 +16,10 @@ gmaps_crawler
 ├── pyproject.toml
 └── README.md
 
-# Para criação do próximo vídeo
+# For creating the next video
 import sidrapy
 
-class Inflacao:
+class Inflation:
   def __init__(self) -> None:
     ipca_raw = sidrapy.get_table(table_code = '1737',
                                 territorial_level = '1',
@@ -29,5 +29,5 @@ class Inflacao:
 
     self.df = pd.DataFrame(ipca_raw)
 
-inf = Inflacao()
+inf = Inflation()
 inf.df

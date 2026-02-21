@@ -1,4 +1,4 @@
-# Sistema de Investimentos
+# Investment System
 ## [UML](docs/UML.md)
 ## Overview
 

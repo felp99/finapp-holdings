@@ -4,7 +4,7 @@ sys.path.append('./src')
 from flask import Flask, request, jsonify
 from functools import wraps
 import datetime
-from analise import InvestimentoTicker
+from analise import TickerInvestment
 import os
 
 app = Flask(__name__)
@@ -19,9 +19,9 @@ def require_api_key(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/investimento-ticker', methods=['POST'])
+@app.route('/investment-ticker', methods=['POST'])
 @require_api_key
-def investimento_ticker():
+def investment_ticker():
     data = request.json
     try:
         ticker = data['ticker']
@@ -30,8 +30,8 @@ def investimento_ticker():
         end = data.get('end')
         start = datetime.datetime.strptime(start, '%Y-%m-%d') if start else None
         end = datetime.datetime.strptime(end, '%Y-%m-%d') if end else None
-        investimento = InvestimentoTicker(ticker, value, start, end)
-        result = investimento.result.df_capital_cumprod.to_json(orient='records')
+        investment = TickerInvestment(ticker, value, start, end)
+        result = investment.result.df_capital_cumprod.to_json(orient='records')
         return result, 200
 
     except KeyError as e:

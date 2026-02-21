@@ -1,10 +1,10 @@
 ## UML
-### UML Inicial
+### Initial UML
 
 ```mermaid
 classDiagram
 
-  class Investimento{
+  class Investment{
     -ticker: str
     -value: float
     -start: datetime
@@ -17,8 +17,8 @@ classDiagram
     + append_selic(df): DataFrame
   }
 
-  class Carteira{
-    -investments: Investimento[]
+  class Portfolio{
+    -investments: Investment[]
     -df: DataFrame
     -df_cumprod: DataFrame
     +__init__(investments)
@@ -27,7 +27,7 @@ classDiagram
     +counting()
   }
 
-    Carteira "1" --* "0..*" Investimento
+    Portfolio "1" --* "0..*" Investment
 
 ```
 
@@ -36,8 +36,8 @@ classDiagram
 ```mermaid
 classDiagram
 
-  class Carteira{
-    -investments: Investimento[]
+  class Portfolio{
+    -investments: Investment[]
     -df: DataFrame
     -df_cumprod: DataFrame
     +__init__(investments)
@@ -46,7 +46,7 @@ classDiagram
     +counting()
   }
 
-    class Investimento{
+    class Investment{
         <<abstract>>
         #ticker: str
         #value: float
@@ -57,38 +57,38 @@ classDiagram
         +__init__(ticker, value, start, end)
         +generate_df():DataFrame
     }
-    class InvestimentoSelic{
+    class SelicInvestment{
         +__init__(*args, **kwargs)
         +generate_df():DataFrame
 
     }
-    class InvestimentoTicker{
+    class TickerInvestment{
         +__init__(*args, **kwargs)
         +generate_df():DataFrame
     }
-    class InvestimentoRecorrente{
+    class RecurringInvestment{
         <<abstract>>
         - freq: str
         - period: str
         +__init__(freq, period, *args, **kwargs)
-        +setup_recorrencia()
+        +setup_recurrence()
     }
-    class InvestimentoSelicRecorrente{
+    class RecurringSelicInvestment{
         +__init__(*args, **kwargs)
         +generate_df():DataFrame
     }
-    class InvestimentoTickerRecorrente{
+    class RecurringTickerInvestment{
         +__init__(*args, **kwargs)
         +generate_df():DataFrame
     }
 
-    Investimento <|-- InvestimentoSelic
-    Investimento <|-- InvestimentoTicker
-    InvestimentoSelic <|-- InvestimentoSelicRecorrente
-    InvestimentoTicker <|-- InvestimentoTickerRecorrente
-    InvestimentoRecorrente <|-- InvestimentoSelicRecorrente
-    InvestimentoRecorrente <|-- InvestimentoTickerRecorrente
-    Carteira "1" --* "0..*" Investimento
+    Investment <|-- SelicInvestment
+    Investment <|-- TickerInvestment
+    SelicInvestment <|-- RecurringSelicInvestment
+    TickerInvestment <|-- RecurringTickerInvestment
+    RecurringInvestment <|-- RecurringSelicInvestment
+    RecurringInvestment <|-- RecurringTickerInvestment
+    Portfolio "1" --* "0..*" Investment
 ```
 
 ### UML v1.3
@@ -96,11 +96,11 @@ classDiagram
 ```mermaid
 classDiagram
 
-  class Carteira{
-    -investments: Investimento[]
+  class Portfolio{
+    -investments: Investment[]
   }
 
-  class Investimento{
+  class Investment{
       <<abstract>>
       #ticker: str
       #value: float
@@ -108,21 +108,20 @@ classDiagram
       #end: datetime
   }
 
-  class InvestimentoSelic{
+  class SelicInvestment{
   }
 
-  class InvestimentoTicker{
+  class TickerInvestment{
   }
 
-  class InvestimentoRecorrente{
+  class RecurringInvestment{
       <<abstract>>
       - freq: str
-      +setup_recorrencia()
+      +setup_recurrence()
   }
-  class InvestimentoSelicRecorrente{
-
+  class RecurringSelicInvestment{
   }
-  class InvestimentoTickerRecorrente{
+  class RecurringTickerInvestment{
   }
 
   class DataFrameUtil{
@@ -136,17 +135,17 @@ classDiagram
     +generate_blank_df(Datetime, Datetime):DataFrame
   }
 
-  Investimento <|-- InvestimentoSelic
-  Investimento <|-- InvestimentoTicker
-  InvestimentoSelic <|-- InvestimentoSelicRecorrente
-  InvestimentoTicker <|-- InvestimentoTickerRecorrente
-  InvestimentoRecorrente <|-- InvestimentoSelicRecorrente
-  InvestimentoRecorrente <|-- InvestimentoTickerRecorrente
+  Investment <|-- SelicInvestment
+  Investment <|-- TickerInvestment
+  SelicInvestment <|-- RecurringSelicInvestment
+  TickerInvestment <|-- RecurringTickerInvestment
+  RecurringInvestment <|-- RecurringSelicInvestment
+  RecurringInvestment <|-- RecurringTickerInvestment
 
-  Investimento "1" <-- "0..*" Carteira
+  Investment "1" <-- "0..*" Portfolio
   
-  DataFrameUtil <|-- Investimento
-  DataFrameUtil <|-- Carteira
+  DataFrameUtil <|-- Investment
+  DataFrameUtil <|-- Portfolio
 ```
 
 ### UML v1.4
@@ -161,11 +160,11 @@ classDiagram
     #df_capital_cumprod: DataFrame
   }
 
-  class Carteira{
-    -investments: Investimento[]
+  class Portfolio{
+    -investments: Investment[]
   }
 
-  class Investimento{
+  class Investment{
       <<abstract>>
       #ticker: str
       #value: float
@@ -175,21 +174,20 @@ classDiagram
       #default: Data
   }
 
-  class InvestimentoSelic{
+  class SelicInvestment{
   }
 
-  class InvestimentoTicker{
+  class TickerInvestment{
   }
 
-  class InvestimentoRecorrente{
+  class RecurringInvestment{
       <<abstract>>
       - freq: str
-      +setup_recorrencia()
+      +setup_recurrence()
   }
-  class InvestimentoSelicRecorrente{
-
+  class RecurringSelicInvestment{
   }
-  class InvestimentoTickerRecorrente{
+  class RecurringTickerInvestment{
   }
 
   class DataFrameUtil{
@@ -201,20 +199,20 @@ classDiagram
     +set_default(): void
   }
 
-  Investimento <|-- InvestimentoSelic
-  Investimento <|-- InvestimentoTicker
-  InvestimentoSelic <|-- InvestimentoSelicRecorrente
-  InvestimentoTicker <|-- InvestimentoTickerRecorrente
-  InvestimentoRecorrente <|-- InvestimentoSelicRecorrente
-  InvestimentoRecorrente <|-- InvestimentoTickerRecorrente
+  Investment <|-- SelicInvestment
+  Investment <|-- TickerInvestment
+  SelicInvestment <|-- RecurringSelicInvestment
+  TickerInvestment <|-- RecurringTickerInvestment
+  RecurringInvestment <|-- RecurringSelicInvestment
+  RecurringInvestment <|-- RecurringTickerInvestment
 
-  Investimento "1" <-- "0..*" Carteira
+  Investment "1" <-- "0..*" Portfolio
   
-  DataFrameUtil <|-- Investimento
-  DataFrameUtil <|-- Carteira
+  DataFrameUtil <|-- Investment
+  DataFrameUtil <|-- Portfolio
 
-  Carteira "1"-->"2" Data
-  Investimento "1"-->"2" Data
+  Portfolio "1"-->"2" Data
+  Investment "1"-->"2" Data
 ```
 
 ### UML v1.5
@@ -229,13 +227,13 @@ classDiagram
     #df_capital_cumprod: DataFrame
   }
 
-  class Carteira{
-    -investments: Investimento[]
+  class Portfolio{
+    -investments: Investment[]
     -result: Data
     -default: Data
   }
 
-  class Investimento{
+  class Investment{
       <<abstract>>
       #ticker: str
       #value: float
@@ -245,21 +243,20 @@ classDiagram
       #default: Data
   }
 
-  class InvestimentoSelic{
+  class SelicInvestment{
   }
 
-  class InvestimentoTicker{
+  class TickerInvestment{
   }
 
-  class InvestimentoRecorrente{
+  class RecurringInvestment{
       <<abstract>>
       - freq: str
-      +setup_recorrencia()
+      +setup_recurrence()
   }
-  class InvestimentoSelicRecorrente{
-
+  class RecurringSelicInvestment{
   }
-  class InvestimentoTickerRecorrente{
+  class RecurringTickerInvestment{
   }
 
   class DataFrameUtil{
@@ -271,60 +268,60 @@ classDiagram
     +set_default(): void
   }
 
-  Investimento <|-- InvestimentoSelic
-  Investimento <|-- InvestimentoTicker
-  Investimento <|-- InvestimentoRecorrente
-  InvestimentoSelic <|-- InvestimentoSelicRecorrente
-  InvestimentoTicker <|-- InvestimentoTickerRecorrente
-  InvestimentoRecorrente <|-- InvestimentoSelicRecorrente
-  InvestimentoRecorrente <|-- InvestimentoTickerRecorrente
+  Investment <|-- SelicInvestment
+  Investment <|-- TickerInvestment
+  Investment <|-- RecurringInvestment
+  SelicInvestment <|-- RecurringSelicInvestment
+  TickerInvestment <|-- RecurringTickerInvestment
+  RecurringInvestment <|-- RecurringSelicInvestment
+  RecurringInvestment <|-- RecurringTickerInvestment
 
-  Investimento "1" <-- "0..*" Carteira
+  Investment "1" <-- "0..*" Portfolio
   
-  DataFrameUtil <|-- Investimento
-  DataFrameUtil <|-- Carteira
+  DataFrameUtil <|-- Investment
+  DataFrameUtil <|-- Portfolio
 
-  Carteira "1"-->"2" Data
-  Investimento "1"-->"2" Data
+  Portfolio "1"-->"2" Data
+  Investment "1"-->"2" Data
 
   class IPCA {
   }
 
-  class InvestimentoIPCA {
+  class IPCAInvestment {
   }
 
-  Investimento <|-- InvestimentoIPCA
-  IPCA <|-- InvestimentoIPCA
+  Investment <|-- IPCAInvestment
+  IPCA <|-- IPCAInvestment
 
   IPCA <|-- DataFrameUtil
-  InvestimentoIPCA "1"-->"2" Data
+  IPCAInvestment "1"-->"2" Data
 ```
 
-## Fluxo de Conteúdo
+## Content Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Felipe
     participant B as Python/Excel 
-    loop A cada Ideia
-    Felipe ->> B: Ideia
+    loop For each Idea
+    Felipe ->> B: Idea
     activate B
-    B ->> Projeto: Código
+    B ->> Project: Code
     deactivate B
-    activate Projeto
-    Projeto ->> Resultado: Dados
-    par Projeto to Vídeo Longo
-    Projeto->>Vídeo Longo: Informação/Explicação
-    and Resultado to Vídeo Longo
-    Resultado->>Vídeo Longo: Informação/Explicação
+    activate Project
+    Project ->> Result: Data
+    par Project to Long Video
+    Project->>Long Video: Information/Explanation
+    and Result to Long Video
+    Result->>Long Video: Information/Explanation
     end
-    deactivate Projeto
-    alt Projeto útil
-    Resultado -->> Felipe: Curiosidade/Informação
-    else Projeto inútil
-    Resultado -->> Projeto: Procura útilidade
+    deactivate Project
+    alt Useful project
+    Result -->> Felipe: Curiosity/Information
+    else Useless project
+    Result -->> Project: Seeks usefulness
     end
     end
-    Felipe ->> Vídeo Short: Curiosidade/Informação
+    Felipe ->> Short Video: Curiosity/Information
 ```
