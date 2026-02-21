@@ -17,7 +17,7 @@ MOCK_RESPONSE = TickerResponse(
     multipliers=[MultiplierPoint(datetime=datetime(2024, 1, 1, 10, tzinfo=timezone.utc), value=1.0)],
 )
 
-PAYLOAD = {"ticker": "BTC-USD", "start": "2024-01-01T00:00:00Z"}
+TICKER_PARAMS = {"ticker": "BTC-USD", "start": "2024-01-01T00:00:00Z"}
 
 
 @pytest.fixture(autouse=True)
@@ -27,9 +27,9 @@ def set_api_key(monkeypatch):
 
 def test_valid_token_returns_200():
     with patch("src.app.routes.fetch_ticker", return_value=MOCK_RESPONSE):
-        response = client.post(
+        response = client.get(
             "/ticker",
-            json=PAYLOAD,
+            params=TICKER_PARAMS,
             headers={"Authorization": f"Bearer {VALID_TOKEN}"},
         )
     assert response.status_code == 200
@@ -41,14 +41,14 @@ def test_valid_token_returns_200():
 
 
 def test_missing_token_returns_403():
-    response = client.post("/ticker", json=PAYLOAD)
+    response = client.get("/ticker", params=TICKER_PARAMS)
     assert response.status_code == 403
 
 
 def test_wrong_token_returns_401():
-    response = client.post(
+    response = client.get(
         "/ticker",
-        json=PAYLOAD,
+        params=TICKER_PARAMS,
         headers={"Authorization": "Bearer wrong-key"},
     )
     assert response.status_code == 401

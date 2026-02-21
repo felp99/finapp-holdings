@@ -32,3 +32,7 @@ class TickerSearchResult(BaseModel):
 
 class TickerSearchResponse(BaseModel):
     results: list[TickerSearchResult]
+
+
+class SelicResponse(BaseModel):
+    multipliers: list[MultiplierPoint]
