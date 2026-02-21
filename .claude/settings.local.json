@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source .venv/bin/activate && pytest tests/ -v 2>&1)",
+      "Bash(python:*)",
+      "Bash(.venv/bin/pytest:*)",
+      "Bash(.venv/bin/pip install httpx -q && .venv/bin/pytest tests/ -v 2>&1)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(.venv/bin/pip install --upgrade yfinance -q && .venv/bin/python -c \"\nimport yfinance as yf\nprint\\(yf.__version__\\)\nt = yf.Ticker\\('BTC-USD'\\)\ndf = t.history\\(start='2023-01-01', end='2023-01-10', interval='1d'\\)\nprint\\('empty:', df.empty\\)\nprint\\(df\\)\n\" 2>&1)",
+      "Bash(.venv/bin/pip freeze:*)",
+      "Bash(source .venv/bin/activate && pytest tests/test_routes.py -v 2>&1)",
+      "Bash(tail:*)",
+      "Bash(source .venv/bin/activate && pytest tests/test_integration.py -m integration -v 2>&1)"
+    ]
+  }
+}

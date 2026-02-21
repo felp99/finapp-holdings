@@ -39,6 +39,14 @@ To initialize the Investment Analytics System, follow these steps:
 
 7. **Regular Usage**: Incorporate the Investment Analytics System into your regular investment management routine. Use it to monitor portfolio performance, make investment decisions, and track progress towards your financial goals.
 
+## Authentication
+
+Set the `API_KEY` environment variable before launching the FastAPI service and include it in every request using the HTTP header `Authorization: Bearer <API_KEY>`. Requests without this bearer token will be rejected.
+
+## Testing
+
+Install dev dependencies and run `pytest` (or `pytest tests/test_analysis.py`) from the repo root to execute the offline-friendly analytics suite.
+
 ## Contributing
 
 Contributions to the Investment Analytics System are welcome! If you have ideas for new features, improvements, or bug fixes, feel free to submit a pull request or open an issue on the GitHub repository.
