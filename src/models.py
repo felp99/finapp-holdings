@@ -1,12 +1,6 @@
 from datetime import datetime
+from enum import Enum
 from pydantic import BaseModel
-
-
-class TickerRequest(BaseModel):
-    ticker: str
-    start: datetime
-    end: datetime | None = None  # defaults to now() in the service
-
 
 class PricePoint(BaseModel):
     datetime: datetime
@@ -36,3 +30,8 @@ class TickerSearchResponse(BaseModel):
 
 class SelicResponse(BaseModel):
     multipliers: list[MultiplierPoint]
+
+class TickerPriceResponse(BaseModel):
+    ticker: str
+    datetime: datetime
+    price: float

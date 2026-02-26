@@ -1,8 +1,12 @@
 from datetime import datetime, timedelta, timezone
 import requests
 import yfinance as yf
-from .models import PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse, SelicResponse
+from .models import (
+    PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse, SelicResponse,
+    TickerPriceResponse,
+)
 
+BCB_SELIC_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados"
 INTERVAL = "1d"
 
 def fetch_ticker(ticker: str, start: datetime, end: datetime | None) -> TickerResponse:
@@ -26,8 +30,17 @@ def fetch_ticker(ticker: str, start: datetime, end: datetime | None) -> TickerRe
     return TickerResponse(prices=prices, multipliers=multipliers)
 
 
-BCB_SELIC_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados"
+def fetch_last_price(ticker: str) -> TickerPriceResponse:
+    t = yf.Ticker(ticker)
+    df = t.history(period="5d", interval=INTERVAL)
 
+    if df.empty:
+        raise ValueError(f"No price data found for ticker '{ticker}'")
+
+    last_row = df["Close"].iloc[-1]
+    last_dt = df.index[-1].tz_convert("UTC").tz_localize(None).to_pydatetime()
+
+    return TickerPriceResponse(ticker=ticker, datetime=last_dt, price=float(last_row))
 
 def _ir_rate(days: int) -> float:
     """Tabela regressiva de IR para renda fixa (prazo desde o aporte)."""
@@ -96,7 +109,6 @@ def fetch_selic(
             current += timedelta(days=1)
 
     return SelicResponse(multipliers=multipliers)
-
 
 def search_tickers(query: str, max_results: int = 10) -> TickerSearchResponse:
     search = yf.Search(query, max_results=max_results)

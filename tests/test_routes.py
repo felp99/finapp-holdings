@@ -6,7 +6,10 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from src.app.main import app
-from src.models import PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse, SelicResponse
+from src.models import (
+    PricePoint, MultiplierPoint, TickerResponse, TickerSearchResult, TickerSearchResponse, SelicResponse,
+    TickerPriceResponse,
+)
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -206,4 +209,41 @@ def test_selic_with_explicit_end():
 def test_selic_service_error_returns_500():
     with patch("src.app.routes.fetch_selic", side_effect=RuntimeError("BCB unreachable")):
         response = client.get("/selic", params=SELIC_PARAMS, headers=AUTH)
+    assert response.status_code == 500
+    
+# ---------------------------------------------------------------------------
+# GET /ticker/price
+# ---------------------------------------------------------------------------
+
+MOCK_PRICE_RESPONSE = TickerPriceResponse(
+    ticker="BTC-USD",
+    datetime=datetime(2024, 1, 3, 10, tzinfo=timezone.utc),
+    price=42000.0,
+)
+
+
+def test_ticker_price_returns_200():
+    with patch("src.app.routes.fetch_last_price", return_value=MOCK_PRICE_RESPONSE):
+        response = client.get("/ticker/price", params={"ticker": "BTC-USD"}, headers=AUTH)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ticker"] == "BTC-USD"
+    assert body["price"] == pytest.approx(42000.0)
+    assert "datetime" in body
+
+
+def test_ticker_price_missing_token_returns_403():
+    response = client.get("/ticker/price", params={"ticker": "BTC-USD"})
+    assert response.status_code == 403
+
+
+def test_ticker_price_unknown_ticker_returns_404():
+    with patch("src.app.routes.fetch_last_price", side_effect=ValueError("No price data found for ticker 'UNKNOWN'")):
+        response = client.get("/ticker/price", params={"ticker": "UNKNOWN"}, headers=AUTH)
+    assert response.status_code == 404
+
+
+def test_ticker_price_service_error_returns_500():
+    with patch("src.app.routes.fetch_last_price", side_effect=RuntimeError("yfinance down")):
+        response = client.get("/ticker/price", params={"ticker": "BTC-USD"}, headers=AUTH)
     assert response.status_code == 500

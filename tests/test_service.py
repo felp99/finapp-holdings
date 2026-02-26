@@ -3,7 +3,8 @@ import pytest
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
-from src.service import fetch_ticker, search_tickers
+from src.service import fetch_ticker, search_tickers, calculate_portfolio, fetch_last_price
+from src.models import InvestmentEvent, EventType
 
 
 def _make_df(closes: list[float], start_iso: str = "2024-01-01 10:00:00+00:00") -> pd.DataFrame:
@@ -233,3 +234,23 @@ def test_search_tickers_passes_query_to_yfinance(mock_search_cls):
     search_tickers("tesla", max_results=5)
 
     mock_search_cls.assert_called_once_with("tesla", max_results=5)
+# ---------------------------------------------------------------------------
+# fetch_last_price
+# ---------------------------------------------------------------------------
+
+@patch("src.service.yf.Ticker")
+def test_fetch_last_price_returns_last_close(mock_ticker_cls):
+    mock_ticker_cls.return_value.history.return_value = _make_df([40000.0, 41000.0, 42000.0])
+
+    result = fetch_last_price("BTC-USD")
+
+    assert result.ticker == "BTC-USD"
+    assert result.price == pytest.approx(42000.0)
+
+
+@patch("src.service.yf.Ticker")
+def test_fetch_last_price_raises_on_empty_df(mock_ticker_cls):
+    mock_ticker_cls.return_value.history.return_value = pd.DataFrame()
+
+    with pytest.raises(ValueError, match="No price data found for ticker 'UNKNOWN'"):
+        fetch_last_price("UNKNOWN")

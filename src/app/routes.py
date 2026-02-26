@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from ..models import TickerResponse, TickerSearchResponse, SelicResponse
-from ..service import fetch_ticker, search_tickers, fetch_selic
+from ..models import TickerResponse, TickerSearchResponse, SelicResponse, TickerPriceResponse
+from ..service import fetch_ticker, search_tickers, fetch_selic, fetch_last_price
 from .dependencies import get_api_key
 
 router = APIRouter(tags=["Ticker"])
@@ -19,13 +19,22 @@ def get_ticker(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
 
+@router.get("/ticker/price", response_model=TickerPriceResponse, dependencies=[Depends(get_api_key)])
+def get_ticker_price(ticker: str = Query(..., description="Ticker symbol, e.g. BTC-USD")) -> TickerPriceResponse:
+    try:
+        return fetch_last_price(ticker)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+
 @router.get("/tickers/search", response_model=TickerSearchResponse, dependencies=[Depends(get_api_key)])
 def get_tickers_search(q: str = Query(..., min_length=1, description="Search query")) -> TickerSearchResponse:
     try:
         return search_tickers(q)
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
-
 
 @router.get("/selic", response_model=SelicResponse, dependencies=[Depends(get_api_key)])
 def get_selic(
