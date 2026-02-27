@@ -30,6 +30,9 @@ def fetch_ticker(ticker: str, start: datetime, end: datetime | None) -> TickerRe
     return TickerResponse(prices=prices, multipliers=multipliers)
 
 
+# Fetches the closing price for a given date using a 1-day window from Yahoo Finance.
+# Past dates return the actual final closing price; today returns the last traded price at request time.
+# No averaging is done — Yahoo returns raw price points. Raises ValueError if the market was closed.
 def fetch_last_price(ticker: str, date: datetime) -> TickerPriceResponse:
     start = date.replace(hour=0, minute=0, second=0, microsecond=0)
     end = start + timedelta(days=1)
