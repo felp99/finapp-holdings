@@ -222,9 +222,12 @@ MOCK_PRICE_RESPONSE = TickerPriceResponse(
 )
 
 
+PRICE_PARAMS = {"ticker": "BTC-USD", "date": "2024-01-03T00:00:00Z"}
+
+
 def test_ticker_price_returns_200():
     with patch("src.app.routes.fetch_last_price", return_value=MOCK_PRICE_RESPONSE):
-        response = client.get("/ticker/price", params={"ticker": "BTC-USD"}, headers=AUTH)
+        response = client.get("/ticker/price", params=PRICE_PARAMS, headers=AUTH)
     assert response.status_code == 200
     body = response.json()
     assert body["ticker"] == "BTC-USD"
@@ -232,18 +235,23 @@ def test_ticker_price_returns_200():
     assert "datetime" in body
 
 
+def test_ticker_price_missing_date_returns_422():
+    response = client.get("/ticker/price", params={"ticker": "BTC-USD"}, headers=AUTH)
+    assert response.status_code == 422
+
+
 def test_ticker_price_missing_token_returns_403():
-    response = client.get("/ticker/price", params={"ticker": "BTC-USD"})
+    response = client.get("/ticker/price", params=PRICE_PARAMS)
     assert response.status_code == 403
 
 
 def test_ticker_price_unknown_ticker_returns_404():
-    with patch("src.app.routes.fetch_last_price", side_effect=ValueError("No price data found for ticker 'UNKNOWN'")):
-        response = client.get("/ticker/price", params={"ticker": "UNKNOWN"}, headers=AUTH)
+    with patch("src.app.routes.fetch_last_price", side_effect=ValueError("No price data found for ticker 'UNKNOWN' on 2024-01-03")):
+        response = client.get("/ticker/price", params={"ticker": "UNKNOWN", "date": "2024-01-03T00:00:00Z"}, headers=AUTH)
     assert response.status_code == 404
 
 
 def test_ticker_price_service_error_returns_500():
     with patch("src.app.routes.fetch_last_price", side_effect=RuntimeError("yfinance down")):
-        response = client.get("/ticker/price", params={"ticker": "BTC-USD"}, headers=AUTH)
+        response = client.get("/ticker/price", params=PRICE_PARAMS, headers=AUTH)
     assert response.status_code == 500

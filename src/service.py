@@ -30,12 +30,15 @@ def fetch_ticker(ticker: str, start: datetime, end: datetime | None) -> TickerRe
     return TickerResponse(prices=prices, multipliers=multipliers)
 
 
-def fetch_last_price(ticker: str) -> TickerPriceResponse:
+def fetch_last_price(ticker: str, date: datetime) -> TickerPriceResponse:
+    start = date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end = start + timedelta(days=1)
+
     t = yf.Ticker(ticker)
-    df = t.history(period="5d", interval=INTERVAL)
+    df = t.history(start=start, end=end, interval=INTERVAL)
 
     if df.empty:
-        raise ValueError(f"No price data found for ticker '{ticker}'")
+        raise ValueError(f"No price data found for ticker '{ticker}' on {start.date()}")
 
     last_row = df["Close"].iloc[-1]
     last_dt = df.index[-1].tz_convert("UTC").tz_localize(None).to_pydatetime()

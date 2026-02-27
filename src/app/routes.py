@@ -20,9 +20,12 @@ def get_ticker(
 
 
 @router.get("/ticker/price", response_model=TickerPriceResponse, dependencies=[Depends(get_api_key)])
-def get_ticker_price(ticker: str = Query(..., description="Ticker symbol, e.g. BTC-USD")) -> TickerPriceResponse:
+def get_ticker_price(
+    ticker: str = Query(..., description="Ticker symbol, e.g. BTC-USD"),
+    date: datetime = Query(..., description="Date to fetch price for (ISO 8601)"),
+) -> TickerPriceResponse:
     try:
-        return fetch_last_price(ticker)
+        return fetch_last_price(ticker, date)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except Exception as exc:

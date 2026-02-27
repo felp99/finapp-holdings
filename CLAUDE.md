@@ -39,7 +39,6 @@ The app is a FastAPI service that simulates investment capital growth over time.
 - `Investment` (abstract) — computes `result` and `default` `Data` objects on init; calls `generate_df()` which subclasses must implement
 - `TickerInvestment` — fetches OHLCV from yfinance, converts `Close` to daily pct-change factors
 - `SelicInvestment` — fetches the full SELIC daily series from BCB (`api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados`) and trims to the requested window
-- `Portfolio` — joins multiple `Investment` objects by merging all four DataFrames with forward-fill
 
 **Pydantic models (`src/analysis/entities.py`):**
 - `TickerRequestModel` — request body (`ticker`, `value`, optional `start`/`end`)
