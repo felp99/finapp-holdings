@@ -11,6 +11,19 @@ from src.models import (
     TickerPriceResponse,
 )
 
+MOCK_PRICES_RESPONSE = TickerResponse(
+    prices=[
+        PricePoint(datetime=datetime(2024, 1, 2, tzinfo=timezone.utc), price=42000.0),
+        PricePoint(datetime=datetime(2024, 1, 3, tzinfo=timezone.utc), price=43500.0),
+    ],
+    multipliers=[
+        MultiplierPoint(datetime=datetime(2024, 1, 2, tzinfo=timezone.utc), value=1.0),
+        MultiplierPoint(datetime=datetime(2024, 1, 3, tzinfo=timezone.utc), value=1.035714),
+    ],
+)
+
+PRICES_PARAMS = {"ticker": "BTC-USD", "from_date": "2024-01-01T00:00:00Z", "to_date": "2024-01-04T00:00:00Z"}
+
 client = TestClient(app, raise_server_exceptions=False)
 
 VALID_TOKEN = "test-key"
@@ -211,6 +224,50 @@ def test_selic_service_error_returns_500():
         response = client.get("/selic", params=SELIC_PARAMS, headers=AUTH)
     assert response.status_code == 500
     
+# ---------------------------------------------------------------------------
+# GET /ticker/prices
+# ---------------------------------------------------------------------------
+
+
+def test_ticker_prices_returns_200():
+    with patch("src.app.routes.fetch_ticker", return_value=MOCK_PRICES_RESPONSE):
+        response = client.get("/ticker/prices", params=PRICES_PARAMS, headers=AUTH)
+    assert response.status_code == 200
+    body = response.json()
+    assert isinstance(body, list)
+    assert len(body) == 2
+
+
+def test_ticker_prices_fields():
+    with patch("src.app.routes.fetch_ticker", return_value=MOCK_PRICES_RESPONSE):
+        response = client.get("/ticker/prices", params=PRICES_PARAMS, headers=AUTH)
+    first = response.json()[0]
+    assert "datetime" in first
+    assert "price" in first
+    assert first["price"] == pytest.approx(42000.0)
+
+
+def test_ticker_prices_missing_from_date_returns_422():
+    response = client.get("/ticker/prices", params={"ticker": "BTC-USD"}, headers=AUTH)
+    assert response.status_code == 422
+
+
+def test_ticker_prices_missing_token_returns_403():
+    response = client.get("/ticker/prices", params=PRICES_PARAMS)
+    assert response.status_code == 403
+
+
+def test_ticker_prices_wrong_token_returns_401():
+    response = client.get("/ticker/prices", params=PRICES_PARAMS, headers={"Authorization": "Bearer wrong-key"})
+    assert response.status_code == 401
+
+
+def test_ticker_prices_service_error_returns_500():
+    with patch("src.app.routes.fetch_ticker", side_effect=RuntimeError("yfinance down")):
+        response = client.get("/ticker/prices", params=PRICES_PARAMS, headers=AUTH)
+    assert response.status_code == 500
+
+
 # ---------------------------------------------------------------------------
 # GET /ticker/price
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from ..models import TickerResponse, TickerSearchResponse, SelicResponse, TickerPriceResponse
+from ..models import PricePoint, TickerResponse, TickerSearchResponse, SelicResponse, TickerPriceResponse
 from ..service import fetch_ticker, search_tickers, fetch_selic, fetch_last_price
 from .dependencies import get_api_key
 
@@ -28,6 +28,18 @@ def get_ticker_price(
         return fetch_last_price(ticker, date)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+
+@router.get("/ticker/prices", response_model=list[PricePoint], dependencies=[Depends(get_api_key)])
+def get_ticker_prices(
+    ticker: str = Query(..., description="Ticker symbol, e.g. BTC-USD"),
+    from_date: datetime = Query(..., description="Start date (ISO 8601)"),
+    to_date: datetime = Query(default=None, description="End date (ISO 8601), defaults to now"),
+) -> list[PricePoint]:
+    try:
+        return fetch_ticker(ticker, from_date, to_date).prices
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
