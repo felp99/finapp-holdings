@@ -36,6 +36,7 @@ def place_order(ticker: str, value: float) -> dict:
         headers={"X-MBX-APIKEY": api_key},
         timeout=30,
     )
+    print(resp.json())
     if not resp.ok:
         raise ValueError(resp.json())
     return resp.json()
