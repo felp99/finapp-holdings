@@ -89,7 +89,6 @@ def create_finapp_event(order: dict, value: float, ticker: str) -> dict:
             "asset_unit_price_currency": fiat_currency,
             "asset_unit_fees": asset_unit_fees,
             "fiat_amount": quote_qty,
-            "fiat_fees": fiat_fees,
             "fiat_currency": fiat_currency,
             "card_id": card_id,
             "metadata": {
