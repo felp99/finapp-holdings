@@ -1,4 +1,4 @@
-# finapp-holdings
+# finapp-investments
 
 ## Start
 
