@@ -91,6 +91,9 @@ def create_finapp_event(order: dict, value: float, ticker: str) -> dict:
             "fiat_fees": fiat_fees,
             "fiat_currency": fiat_currency,
             "card_id": card_id,
+            "metadata": {
+                "binance_response": order,
+            },
         }
     }
 
