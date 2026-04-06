@@ -9,7 +9,7 @@ import requests
 from .finapp import Finapp
 
 BINANCE_BASE_URL = "https://api.binance.com"
-
+ADDRESS = "Binance"
 
 def _sign(params: dict, secret: str) -> str:
     query = "&".join(f"{k}={v}" for k, v in params.items())
@@ -92,6 +92,7 @@ def create_finapp_event(order: dict, value: float, ticker: str) -> dict:
             "fiat_currency": fiat_currency,
             "card_id": card_id,
             "metadata": {
+                "wallet_address": ADDRESS,
                 "binance_response": order,
             },
         }
